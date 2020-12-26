@@ -1,0 +1,38 @@
+# PeaksolEssScoreBoard运行于PeaksolEss, 以及前置插件 skRayFall.
+command /persb:
+	aliases: /pereloadscoreboard
+	usage: /persb
+	description: 重载记分板
+	permission: PeaksolEss.admin
+	trigger:
+		loop all players:
+			wipe loop-player's sidebar
+			set name of sidebar of loop-player to {sbtitle}
+			set {sbsrc} to "plugins/PeaksolEss/scoreboard.txt"
+			set score "%line 1 in file {sbsrc}%" in sidebar of loop-player to 15
+			set score "%line 2 in file {sbsrc}%" in sidebar of loop-player to 14
+			set score "%line 3 in file {sbsrc}%" in sidebar of loop-player to 13
+			set score "%line 4 in file {sbsrc}%" in sidebar of loop-player to 12
+			set score "%line 5 in file {sbsrc}%" in sidebar of loop-player to 11
+			set score "%line 6 in file {sbsrc}%" in sidebar of loop-player to 10
+			set score "%line 7 in file {sbsrc}%" in sidebar of loop-player to 9
+			set score "%line 8 in file {sbsrc}%" in sidebar of loop-player to 8
+			set score "%line 9 in file {sbsrc}%" in sidebar of loop-player to 7
+			set score "%line 10 in file {sbsrc}%" in sidebar of loop-player to 6
+			set score "%line 11 in file {sbsrc}%" in sidebar of loop-player to 5
+			set score "%line 12 in file {sbsrc}%" in sidebar of loop-player to 4
+			set score "%line 13 in file {sbsrc}%" in sidebar of loop-player to 3
+			set score "%line 14 in file {sbsrc}%" in sidebar of loop-player to 2
+			set score "%line 15 in file {sbsrc}%" in sidebar of loop-player to 1
+			delete score "<none>" in sidebar of loop-player
+		broadcast "&a记分板已加载."
+
+command /peusb:
+	aliases: /peunloadscoreboard
+	usage: /peusb
+	description: 卸载记分板
+	permission: PeaksolEss.admin
+	trigger:
+  	loop all players:
+			wipe loop-player's sidebar
+		broadcast "&a记分板已卸载."

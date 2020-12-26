@@ -1,0 +1,348 @@
+# PeaksolEss运行于Skript, 以及前置插件 Skellett, skQuery, skript-yaml, skUtilities.
+function systemBroadcast(message: text):
+	set {_systembroadcast} to {systemmessageformat}
+	replace all "<newline>" with new line in {_systembroadcast}
+	replace all "\n" with "%new line%   " in {_message}
+	replace all "<message>" with {_message} in {_systembroadcast}
+	broadcast "%{_systembroadcast}%"
+
+function systemMessage(target: player, message: text):
+	set {_systemmessage} to {systemmessageformat}
+	replace all "<newline>" with new line in {_systemmessage}
+	replace all "\n" with "%new line%   " in {_message}
+	replace all "<message>" with {_message} in {_systemmessage}
+	send "%{_systemmessage}%" to {_target}
+
+function customBroadcast(playerName: text, suffix: text, message: text):
+	set {_custombroadcast} to {playermessageformat}
+	replace all "<player>" with {_playerName} in {_custombroadcast}
+	if "%{_suffix}%" is "<none>":
+		replace all "<suffix>" with "" in {_custombroadcast}
+	else:
+		replace all "<suffix>" with {_suffix} in {_custombroadcast}
+	replace all "<newline>" with new line in {_custombroadcast}
+	if {allowmultiplelines} is true:
+		replace all {linebreak} with "%new line%%{lineindentation}%" in {_message}
+	replace all "<message>" with {_message} in {_custombroadcast}
+	broadcast "%{_custombroadcast}%"
+
+function download(url: text, path: text):
+	download from {_url} to {_path}
+
+on script load:
+	set {version} to "1.2.1"
+	load yaml "plugins/PeaksolEss/config.yml" as "config"
+	skript-yaml "config" is empty:
+		set the header of "config" to "================================", " PeaksolEss by Peaksol" and "================================"
+		set skript-yaml value "Messages.ClearScreenLineCount" from "config" to "20"
+		set skript-yaml value "Messages.MessageFormat.PlayerMessage.CustomFormat" from "config" to "false"
+		set skript-yaml value "Messages.MessageFormat.PlayerMessage.Format" from "config" to " &9&l<player> <suffix><newline>   &r<message>"
+		set skript-yaml value "Messages.MessageFormat.PlayerMessage.AllowMultipleLines" from "config" to "true"
+		set skript-yaml value "Messages.MessageFormat.PlayerMessage.LineBreak" from "config" to "\n"
+		set skript-yaml value "Messages.MessageFormat.PlayerMessage.LineIndentation" from "config" to "   "
+		set skript-yaml value "Messages.MessageFormat.SystemMessage.Format" from "config" to " &9&lPeaksolEss &b[系统]<newline>   &r<message>"
+		set skript-yaml value "Safe.TNT.TntAlarm" from "config" to "true"
+		set skript-yaml value "Safe.TNT.AntiExplode" from "config" to "true"
+		save yaml "config"
+	set {clearscreenlinecount} to skript-yaml value "Messages.ClearScreenLineCount" of "config"
+	set {allowmultiplelines} to skript-yaml value "Messages.MessageFormat.PlayerMessage.AllowMultipleLines" of "config"
+	set {linebreak} to skript-yaml value "Messages.MessageFormat.PlayerMessage.LineBreak" of "config"
+	set {lineindentation} to skript-yaml value "Messages.MessageFormat.PlayerMessage.LineIndentation" of "config"
+	set {customplayermessageformat} to skript-yaml value "Messages.MessageFormat.PlayerMessage.CustomFormat" of "config"
+	set {playermessageformat} to skript-yaml value "Messages.MessageFormat.PlayerMessage.Format" of "config"
+	set {systemmessageformat} to skript-yaml value "Messages.MessageFormat.SystemMessage.Format" of "config"
+	set {tntalarm} to skript-yaml value "Safe.TNT.TntAlarm" of "config"
+	set {antiexplode} to skript-yaml value "Safe.TNT.AntiExplode" of "config"
+	wait 0.5 second
+	systemBroadcast("&aPeaksolEss-%{version}% 已被加载.")
+
+command /pe [<text>] [<text>]:
+	aliases: /peaksoless
+	trigger:
+		if arg 1 is not set:
+			systemMessage(player, "&aPeaksolEss-%{version}% Installed. Type &n/pe help&a for help.")
+		else:
+			if arg 1 is "suffix", "s", "chat", "c", "getbilibiliinfo", "gbi", "superuserdo", "sudo", "clearscreen", "cs", "kick", "k", "help", "h", "warn", "w", "report", "r", "reportlist", "rl", "clearreportlist", "crl", "reloadscoreboard", "rsb", "unloadscoreboard", "usb", "reload", "rel", "update", "u", "askcps", "acps", "clr", "color" or "colors":
+				if arg 2 is set:
+					make player execute command "pe%arg 1% %arg 2%"
+				else:
+					make player execute command "pe%arg 1%"
+			else:
+				systemMessage(player, "&c未知的指令, 使用 &n/pe help&c 查看帮助.")
+
+command /peh [<text>]:
+	aliases: /pehelp
+	description: PeaksolEss 帮助
+	trigger:
+		if arg is set:
+			if arg is "1":
+				systemMessage(player, "&6---------------- 帮助 第 1/3 页 ----------------")
+				send "   &6/peaksoless suffix[s] <玩家> <后缀> &7- 设置玩家后缀"
+				send "   &6/peaksoless chat[c] <玩家> <后缀> <消息> &7- 伪造一条聊天消息"
+				send "   &6/peaksoless getbilibiliinfo[gbi] <uid> &7- 获取指定UID的B站信息"
+				send "   &6/peaksoless superuserdo[sudo] <玩家> <命令> &7- 强制玩家执行命令"
+				send "   &6/peaksoless clearscreen[cs] &7- 清屏"
+				send "   &6/peaksoless kick[k] <玩家> <理由> &7- 踢出一名玩家"
+				send "   &6/peaksoless help[h] &7- 显示此帮助"
+				send "   &2小提示: PeaksolEss的命令可以使用缩写/省略空格."
+				send "   &2如 /peaksoless help = /pe help = /pe h = /peh"
+			else if arg is "2":
+				systemMessage(player, "&6---------------- 帮助 第 2/3 页 ----------------")
+				send "   &6/peaksoless warn[w] <玩家> <理由> &7- 使用GUI警告一名玩家"
+				send "   &6/peaksoless report[r] <玩家> [理由] &7- 举报一名玩家"
+				send "   &6/peaksoless reportlist[rl] &7- 显示举报列表"
+				send "   &6/peaksoless clearreportlist[crl] &7- 清空举报列表"
+				send "   &6/peaksoless reloadscoreboard[rsb] &7- 加载记分板 (Addon: ScoreBoard)"
+				send "   &6/peaksoless unloadscoreboard[usb] &7- 卸载记分板 (Addon: ScoreBoard)"
+				send "   &6/peaksoless reload[rel] &7- 重载 PeaksolEss"
+
+			else if arg is "3":
+				systemMessage(player, "&6---------------- 帮助 第 3/3 页 ----------------")
+				send "   &6/peaksoless update[u] &7- 下载最新版本的 PeaksolEss 并安装. (Addon: Updater)"
+				send "   &6/peaksoless askcps[acps] <玩家> &7- 询问玩家点击方式"
+				send "   &6/peaksoless color[clr] &7- 查看颜色列表"
+			else:
+				systemMessage(player, "&c无效的页码!")
+		else:
+			make player execute command "peh 1"
+
+command /pes [<player>] [<text>]:
+	aliases: /pesuffix
+	description: 设置玩家后缀
+	usage: /pes <玩家> <后缀>
+	permission: peaksoless.admin
+	trigger:
+		if arg 1 and arg 2 are set:
+			set {suffix.%arg 1%} to "&b[%arg 2%]"
+			systemMessage(player, "&a已将 %arg 1% 的后缀设置为 &b[%arg 2%]")
+		else:
+			systemMessage(player, "&c正确用法: /pes <玩家> <后缀>")
+
+command /pecs [<text>]:
+	aliases: /peclearscreen
+	description: 清屏
+	usage: /pucs
+	trigger:
+		loop {clearscreenlinecount} times:
+			send ""
+
+command /pesudo [<player>] [<text>]:
+	aliases: /pesuperuserdo
+	description: 强制玩家执行命令
+	usage: /pesudo <玩家> <命令>
+	permission: peaksoless.admin
+	trigger:
+		if arg 1 and arg 2 are set:
+			make arg 1 execute command arg 2
+		else:
+			systemMessage(player, "&c正确用法: /pesudo <玩家> <命令>")
+
+command /perel [<text>]:
+	aliases: /pereload
+	description: 重载 PeaksolEss
+	usage: /perel
+	permission: peaksoless.admin
+	trigger:
+		systemBroadcast("&a正在重载PeaksolEss...")
+		wait 0.5 second
+		make player execute command "sk reload %script's name%"
+
+on login:
+	"%{suffix.%player%}%" is "<none>"
+	{customplayermessageformat} is true
+	set {suffix.%player%} to "[玩家]"
+
+on chat:
+	{customplayermessageformat} is true
+	cancel event
+	customBroadcast("%player%", "%{suffix.%player%}%", message)
+
+command /pec [<text>] [<text>] [<text>]:
+	aliases: /pechat
+	description: 伪造一条聊天消息.
+	usage: /pec <玩家> <后缀> <消息>
+	permission: peaksoless.admin
+	trigger:
+		if arg 1, arg 2 and arg 3 are set:
+			if {customplayermessageformat} is true:
+				customBroadcast(arg 1, arg 2, arg 3)
+			else:
+				systemMessage(player, "&c配置文件未启用 CustomFormat!")
+		else:
+			systemMessage(player, "&c正确用法: /pec <玩家> <后缀> <消息>")
+
+command /pegbi [<text>]:
+	aliases: /pegetbilibiliinfo
+	description: 获取指定UID的B站信息
+	usage: /pegbi <用户名>
+	permission: peaksoless.admin
+	trigger:
+		systemMessage(player, "&c待制作...")
+		false
+		if arg is set:
+			set {infojson} to line 1 from url "https://api.bilibili.com/x/web-interface/search/type?keyword=%arg%&search_type=bili_user"
+			send "https://api.bilibili.com/x/web-interface/search/type?keyword=%arg%&search_type=bili_user"
+			set {uname} to the sub text of {infojson} from the first index of """uname"":" in {infojson} + 9 to the first index of ",""offic" in {infojson} - 2
+			if arg is unicode {uname} as text:
+				set {fans}, {views} and {level} to "?"
+				set {level} to the sub text of {infojson} from the first index of """level"":" in {infojson} + 8 to the first index of ",""gende" in {infojson} - 1
+				set {fans} to the sub text of {infojson} from the first index of """fans"":" in {infojson} + 7 to the first index of ",""is_up" in {infojson} - 1
+				set {uid} to the sub text of {infojson} from the first index of """mid"":" in {infojson} + 6 to the first index of ",""is_li" in {infojson} - 1
+				set {sign} to unicode the sub text of {infojson} from the first index of """usign"":" in {infojson} + 9 to the first index of ",""videos" in {infojson} - 2 as text
+				set {viewsjson} to line 1 from url "http://api.bilibili.com/x/space/upstat?mid=%{uid}%"
+				set {views} to the subtext of {viewsjson} from the last index of "ve" in {viewsjson} + 12 to the last index of "}," in {viewsjson} - 1
+				systemMessage(player, "&a&l%{uname}% 的B站信息:\n&a粉丝: &r%{fans}%\n&a播放: &r%{views}%\n&a等级: &rLV%{level}%\n&aUID: &r%{uid}%\n&a简介: &r%{sign}%")
+			else:
+				systemMessage(player, "&c找不到对应用户! (由于编码问题, 目前不支持中文搜索)")
+		else:
+			systemMessage(player, "&c正确用法: /pegbi <用户名>")
+
+on place of a TNT:
+	{tntalarm} is true:
+		systemBroadcast("&c%player% 正在放置TNT!")
+
+on explode:
+	{antiexplode} is true:
+		cancel event
+
+command /pek [<player>] [<text>]:
+	aliases: /pekick
+	description: 踢出一名玩家
+	usage: /pek <玩家> <理由>
+	permission: peaksoless.admin
+	trigger:
+		if arg 1 and arg 2 are set:
+			kick arg 1 because arg 2
+			systemBroadcast("&c&l玩家 &n%arg 1%&c&l 因 &n%arg 2%&c&l 被踢出了游戏.")
+		else:
+			systemMessage(player, "&c正确用法: /pek <玩家> <理由>")
+
+command /pew [<player>] [<text>]:
+	aliases: /pewarn
+	description: 使用GUI警告一名玩家
+	usage: /pew <玩家> <理由>
+	permission: peaksoless.admin
+	trigger:
+		if arg 1 and arg 2 are set:
+			set {_GUI} to new book
+			set {_component} to a new text component with "&c&l(!) 信息%new line%%arg 2%"
+			add {_component} to {_alltext::*}
+			add text component {_alltext::*} to book {_GUI}
+			open book {_GUI} to arg 1
+		else:
+			systemMessage(player, "&c正确用法: /pew <玩家> <理由>")
+
+command /per [<player>] [<text>]:
+	aliases: /pereport
+	description: 举报一名玩家
+	usage: /per <玩家>
+	executable by: players
+	trigger:
+		if arg 1 is set:
+			if arg 1 is "%player%":
+				systemMessage(player, "&c你不能举报你自己!")
+			else if arg 2 isn't Empty:
+				systemMessage(player, "&a&l----------成功发送举报----------\n&a举报玩家: &r%player%\n&a举报对象: &r%arg 1%\n&a举报原因: &r%arg 2%")
+				add "&a> 玩家 %arg 1% 因为 '%arg 2%' 被 %player% 举报\n" to {reports::*}
+				set {displayreports} to "%{reports::*}%"
+				replace all "and" and "," with "" in {displayreports}
+			else:
+				open chest with 3 row named "§9举报 %arg 1%" to player
+				wait 5 ticks
+				format slot 10 of player with iron sword named "&c异常的战斗方式&7(Killaura/Reach/AutoClicker等)" to close then run [execute player command "/per %arg 1% 异常的战斗方式"]
+				format slot 11 of player with ender pearl named "&c异常的移动方式&7(Teleport/Speed/Velocity等)" to close then run [execute player command "/per %arg 1% 异常的移动方式"]
+				format slot 12 of player with iron pickaxe named "&c异常的建筑方式&7(Scaffold/Tower/FastBreak等)" to close then run [execute player command "/per %arg 1% 异常的建筑方式"]
+				format slot 13 of player with name tag named "&c刷屏/广告/骂人/其他言论" to close then run [execute player command "/per %arg 1% 刷屏/广告/骂人/其他言论"]
+				format slot 14 of player with flint and steel named "&c破坏队友游戏体验" to close then run [execute player command "/per %arg 1% 破坏队友游戏体验"]
+				format slot 15 of player with lead named "&c非法队伍联合" to close then run [execute player command "/per %arg 1% 非法队伍联合"]
+				format slot 16 of player with book named "&c其他" to close then run [systemMessage(player, "&a使用 &r""&n/per %arg 1% <其他原因>&r"" &a来举报其他原因")]
+		else:
+			systemMessage(player, "&c正确用法: /per <玩家>")
+
+command /perl [<text>]:
+	aliases: /pereportlist
+	description: 显示举报列表
+	permission: peaksoless.admin
+	usage: /perl
+	trigger:
+		systemMessage(player, "%{displayreports}%")
+
+command /pecrl [<text>]:
+	aliases: /peclearreportlist
+	description: 清空举报列表
+	permission: peaksoless.admin
+	usage: /pecrl
+	trigger:
+		set {reports::*} to ""
+		systemMessage(player, "&a成功清空举报列表.")
+
+command /peacps [<player>] [<text>]:
+	aliases: /peaskcps, /askcps, /acps
+	usage: /peacps <玩家>
+	description: 询问玩家点击方式
+	permission: peaksoless.staff
+	trigger:
+		if arg 1 is set:
+			set {_book} to a new book
+			set {_title} to a new text component with "&c&n您CPS过高, 请选择点击方式:%nl%%nl%"
+			set {_idk} to a new text component with "&2> 我并不知道我的CPS过高%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 我并不知道我的CPS过高" to text component {_idk}
+			set {_bug} to a new text component with "&2> 卡BUG%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 卡BUG" to text component {_bug}
+			set {_jc} to a new text component with "&2> JC(抖动点击)%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 抖动点击" to text component {_jc}
+			set {_dc} to a new text component with "&2> DC(拖动点击)%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 拖动点击" to text component {_dc}
+			set {_bc} to a new text component with "&2> BC(蝴蝶点击)%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 蝴蝶点击" to text component {_bc}
+			set {_ac} to a new text component with "&2> AC(连点器)%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 连点器" to text component {_ac}
+			set {_normal} to a new text component with "&2> 平点%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 平点" to text component {_normal}
+			set {_multi} to a new text component with "&2> 多设备%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 多设备" to text component {_multi}
+			set {_other} to a new text component with "&2> 其它%nl%"
+			add click event with action RUN_COMMAND with execute "/answercps 其它" to text component {_other}
+			add {_title} to {_alltext::*}
+			add {_idk} to {_alltext::*}
+			add {_bug} to {_alltext::*}
+			add {_jc} to {_alltext::*}
+			add {_dc} to {_alltext::*}
+			add {_bc} to {_alltext::*}
+			add {_ac} to {_alltext::*}
+			add {_normal} to {_alltext::*}
+			add {_multi} to {_alltext::*}
+			add {_other} to {_alltext::*}
+			add text component {_alltext::*} to book {_book}
+			open book {_book} to arg 1
+			set {ac.%arg 1%} to 1
+		else:
+			systemMessage(player, "&c正确用法: /peacps <玩家>")
+
+command /answercps <text>:
+	trigger:
+		if {ac.%player%} >= 1: 
+			set {ac.%player%} to 0
+			loop all players:
+				loop-player has permission "peaksoless.staff"
+				systemMessage({answer.%loop-player%}, "&a%player% 的回答: &r%arg%")
+
+command /peclr [<text>]:
+	aliases: /pecolor, /pecolors
+	description: 显示颜色列表
+	permission: peaksoless.staff
+	usage: /peclr
+	trigger:
+		systemMessage(player, "&a以下为可用颜色/样式代码:\n&0&&00 &1&&11 &2&&22 &3&&33 &4&&44 &5&&55 &6&&66 &7&&77 &8&&88 &9&&99\n&a&&aa &b&&bb &c&&cc &d&&dd &e&&ee &f&&ff &r&&rr\n&l&&ll&r &m&&mm&r &n&&nn&r &o&&oo&r")
+
+on command:
+	the player is not a op
+	if "%command%" is "ldcrutils", "lu", "utils", "ldcrutils:ldcrutils", "ldcrutils:lu" or "ldcrutils:utils":
+		cancel event
+		send "&6&lLdcrUtils &7>> &bLdcrUtils Powered v33 &lBy.Ldcr"
+	else if "/%command%" contains "/ldcrutils-", "/lu-" or "/utils-":
+		cancel event
+		send "Unknown command. Type ""/help"" for help."
+	else if "%command%" is "peaksol":
+		player is "Peaksol"
+		op player
