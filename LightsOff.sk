@@ -1,0 +1,19 @@
+on script load:
+	set {unclickable} to false
+
+function toggle(block: block):
+	if {_block} is active redstone lamp:
+		set block behind {_block} to air
+	else:
+		set block behind {_block} to redstone block
+
+on rightclick on a redstone lamp:
+	{unclickable} is false
+	set {unclickable} to true
+	toggle(event-block)
+	toggle(the block upwards the event-block)
+	toggle(the block downwards the event-block)
+	toggle(the block left the event-block)
+	toggle(the block right the event-block)
+	wait 0.2 second
+	set {unclickable} to false

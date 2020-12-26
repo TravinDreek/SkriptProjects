@@ -1,0 +1,38 @@
+function teleport(p: player, loc: location):
+	add {_p} to {teleporting::*}
+	set {_from} to location ({_p}'s x-pos, {_loc}'s y-pos, {_p}'s z-pos) of world {_p}'s world
+	set yaw of {_from} to 0.01
+	set pitch of {_from} to 90
+	set {_upwards::*} to 20, 50 and 100
+	set {_downwards::*} to 50 and 20
+	set {_p}'s gamemode to spectator
+	set {_p}'s fly speed to 0
+	loop {_upwards::*}:
+		teleport {_p} to location loop-value meter above {_from}
+		push {_p} upwards
+		wait 1 seconds
+	set {_to} to location ({_loc}'s x-pos, {_from}'s y-pos, {_loc}'s z-pos) of world {_p}'s world
+	set {_distance} to (distance between {_from} and {_to})
+	set {_direction} to (direction from {_from} to {_to})
+	push {_p} {_direction} at speed ({_distance} / 10)
+	wait 1 second
+	teleport {_p} to location ({_loc}'s x-pos, {_p}'s y-pos, {_loc}'s z-pos) of world {_p}'s world
+	wait 1 seconds
+	loop {_downwards::*}:
+		push {_p} downwards
+		teleport {_p} to location loop-value meter above {_loc}
+		wait 1 seconds
+	set yaw of {_loc} to 0.01
+	set pitch of {_loc} to 0.01
+	teleport {_p} to {_loc}
+	set {_p}'s gamemode to survival
+	set {_p}'s fly speed to 1
+	remove {_p} from {teleporting::*}
+
+command /goto <number> <number> <number>:
+	trigger:
+		teleport(player, location at arg-1, arg-2, arg-3)
+
+command /push <number>:
+	trigger:
+		push player east at velocity arg
