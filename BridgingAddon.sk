@@ -1,0 +1,365 @@
+# ###############################
+# BridgingAddon by Peaksol
+# Staff权限: bridge.staff
+# Bypass权限: bridge.bypass
+# ###############################
+
+# Config
+options:
+	# 搭路练习世界
+	bridge_world: "world"
+	# 消息前缀
+	prefix: &bI&en&cf &bNetwork &7> &a
+	# CPS 上限
+	cps_limit: 20
+	# 触发自动警告需要达到的 VL 值
+	autowarn_vl: 2
+	# CPS 显示格式
+	format: &a&l%{_p}% &7| &r%{cps.l.%{_p}%}% / %{cps.max.l.%{_p}%}% &bLCPS &7| &r%{cps.r.%{_p}%}% / %{cps.max.r.%{_p}%}% &bRCPS
+
+# Private Functions
+function bc(msg: text):
+	broadcast "{@prefix}%{_msg}%"
+
+function msg(p: sender, msg: text):
+	send "{@prefix}%{_msg}%" to {_p}
+
+function getCPS(p: player) :: text:
+	return "{@format}"
+
+function bookWarn(p: player):
+	set {_book} to a new book
+	set {_text} to a new text component with "%nl%&c&l  [!] 警告 %nl%%nl%   &c由于你的CPS过高，%nl%   &c被工作人员警告。%nl%%nl%   &7如果你使用的是拖动%nl%   &7点击、蝴蝶点击等特%nl%   &7殊点击方式，请前往%nl%   &b&nQQ1721650075%nl%   &7证明你的点击方式。"
+	add text component {_text} to book {_book}
+	open book {_book} to {_p}
+
+function bookAsk(p: player):
+	set {_book} to a new book
+	set {_title} to a new text component with "&c&n您CPS过高, 请选择点击方式:%nl%%nl%"
+	set {_idk} to a new text component with "&2> 我并不知道我的CPS过高%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 我并不知道我的CPS过高" to text component {_idk}
+	set {_bug} to a new text component with "&2> 卡BUG%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 卡BUG" to text component {_bug}
+	set {_jc} to a new text component with "&2> JC(抖动点击)%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 抖动点击" to text component {_jc}
+	set {_dc} to a new text component with "&2> DC(拖动点击)%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 拖动点击" to text component {_dc}
+	set {_bc} to a new text component with "&2> BC(蝴蝶点击)%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 蝴蝶点击" to text component {_bc}
+	set {_ac} to a new text component with "&2> AC(连点器)%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 连点器" to text component {_ac}
+	set {_normal} to a new text component with "&2> 平点%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 平点" to text component {_normal}
+	set {_multi} to a new text component with "&2> 多设备%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 多设备" to text component {_multi}
+	set {_other} to a new text component with "&2> 其他%nl%"
+	add click event with action RUN_COMMAND with execute "/answercps 其他" to text component {_other}
+	add {_title} to {_alltext::*}
+	add {_idk} to {_alltext::*}
+	add {_bug} to {_alltext::*}
+	add {_jc} to {_alltext::*}
+	add {_dc} to {_alltext::*}
+	add {_bc} to {_alltext::*}
+	add {_ac} to {_alltext::*}
+	add {_normal} to {_alltext::*}
+	add {_multi} to {_alltext::*}
+	add {_other} to {_alltext::*}
+	add text component {_alltext::*} to book {_book}
+	open book {_book} to {_p}
+
+function resetTimer(p: player):
+	set {timer.%{_p}%::enabled} to true
+	set {timer.%{_p}%::startTime} to now
+
+function endTimer(p: player) :: text:
+	if {timer.%{_p}%::enabled} is true:
+		set {timer.%{_p}%::enabled} to false
+		return "%difference between {timer.%{_p}%::startTime} and now%"
+	else:
+		return "none"
+
+function refreshTasks(p: player):
+	loop {tasks::*}:
+		{playertasks::%{_p}%::%loop-index%::times} is not set
+		set {playertasks::%{_p}%::%loop-index%::times} to 0
+
+# Public Functions
+function onTask(p: player, taskindex: number):
+	if {_p} has permission "tasks.bridge.%{_taskindex}%":
+		{_p} doesn't have permission "tasks.bridge.%{_taskindex}%.over"
+		add 1 to {playertasks::%{_p}%::%{_taskindex}%::times}
+		msg({_p}, "&a任务进度: %{tasks::%{_taskindex}%}% (%{playertasks::%{_p}%::%{_taskindex}%::times}%/%{taskstimesrequired::%{_taskindex}%}%)")
+		{playertasks::%{_p}%::%{_taskindex}%::times} >= {taskstimesrequired::%{_taskindex}%}
+		msg({_p}, "&6你完成了任务: %{tasks::%{_taskindex}%}%! (+50 搭路经验, +100 全服经验, +300 全服金币)")
+		console command "lp user %{_p}% permission settemp tasks.bridge.%{_taskindex}%.over true 1d"
+		console command "lp user %{_p}% permission unset tasks.bridge.%{_taskindex}%"
+		console command "blocklv add %{_p}% 50" # 增加 BlockLv
+		console command "lobbylevel giveexp Peaksol 100" # 增加 LobbyLevel
+		console command "eco give Peaksol 300" # 增加金币
+		clear {playertasks::%{_p}%::%{_taskindex}%::*}
+		refreshTasks({_p})
+
+function onVictory(p: player):
+	{_p} is in world {@bridge_world}
+	set {_x} to {_p}'s x-pos
+	set {_z} to {_p}'s z-pos
+	if true:
+		# 完成 10 次侧搭
+		{_p}'s x-pos is between -79 and -6
+		{_p}'s z-pos is between 66 and 135
+		onTask({_p}, 1)
+		exit all sections
+	if true:
+		# 完成 1 次高级侧搭
+		#{_p}'s x-pos is between -120 and -91
+		#{_p}'s z-pos is between -67 and -3
+		onTask({_p}, 2)
+		exit all sections
+	if true:
+		# 完成 3 次速升/速降.
+		{_p}'s x-pos is between -100 and -91
+		{_p}'s z-pos is between 66 and 233
+		onTask({_p}, 3)
+		exit all sections
+	if true:
+		# 完成 1 次极限跳
+		{_p}'s x-pos is between -117 and -92
+		{_p}'s z-pos is between -94 and -90
+		onTask({_p}, 4)
+		exit all sections
+	if true:
+		# 完成 2 次墙搭
+		{_p}'s x-pos is between -84 and -47
+		{_p}'s z-pos is between 0 and 52
+		onTask({_p}, 5)
+		exit all sections
+	if true:
+		# 完成 3 次 TNT 跳
+		{_p}'s x-pos is between -174 and -98
+		{_p}'s z-pos is between 36 and 57
+		onTask({_p}, 6)
+		exit all sections
+	if true:
+		# 完成 1 次 自救
+		{_p}'s x-pos is between -252 and -176
+		{_p}'s z-pos is between 65 and 76
+		onTask({_p}, 7)
+		exit all sections
+
+# Events
+on script load:
+	# 奇妙的写法, 你看不懂的!
+	clear {tasks::*}
+	clear {taskstimesrequired::*}
+	add "完成 10 次侧搭" to {tasks::*}
+	add 10 to {taskstimesrequired::*}
+	add "完成 1 次高级侧搭" to {tasks::*}
+	add 1 to {taskstimesrequired::*}
+	add "完成 3 次速升/速降" to {tasks::*}
+	add 3 to {taskstimesrequired::*}
+	add "完成 1 次极限跳" to {tasks::*}
+	add 1 to {taskstimesrequired::*}
+	add "完成 2 次墙搭" to {tasks::*}
+	add 2 to {taskstimesrequired::*}
+	add "完成 3 次 TNT 跳" to {tasks::*}
+	add 3 to {taskstimesrequired::*}
+	add "完成 1 次自救" to {tasks::*}
+	add 1 to {taskstimesrequired::*}
+
+on join:
+	refreshTasks(player)
+	set {vl.%player%}, {cps.max.l.%player%} and {cps.max.r.%player%} to 0
+
+on packet:
+	if event-string contains "PacketPlayInBlockPlace":
+		add 1 to {cps.r.%player%}
+	else if event-string is "PacketPlayOutTitle":
+		set {_survivalTime} to packet field "d"
+		if {_survivalTime} is 10:
+			"%packet field ""b""%" contains "传送点已设置"
+		else if {_survivalTime} is 20:
+			"%packet field ""b""%" contains "VICTORY"
+			onVictory(event-player)
+		else if {_survivalTime} is 40:
+			"%packet field ""b""%" contains "Max"
+
+on leftclick:
+	add 1 to {cps.l.%player%}
+
+on command:
+	if command is "sk" or "skript":
+		player is not a op
+		cancel event
+	else if full command is "bridge":
+		wait 2 ticks
+		msg(player, "&b欲查看附加的 Bridge 指令, 请使用 &n/baddon&b.")
+
+every second:
+	loop all players:
+		if {cps.l.%loop-player%} is more than {cps.max.l.%loop-player%}:
+			set {cps.max.l.%loop-player%} to {cps.l.%loop-player%}
+		if {cps.r.%loop-player%} is more than {cps.max.r.%loop-player%}:
+			set {cps.max.r.%loop-player%} to {cps.r.%loop-player%}
+		if {cps.l.%loop-player%} or {cps.r.%loop-player%} is more than {@cps_limit}:
+			loop-player does not have permission "bridge.bypass"
+			add 1 to {vl.%loop-player%}
+			{vl.%loop-player%} is {@autowarn_vl}
+			set {vl.%loop-player%} to 0
+			bookWarn(loop-player)
+			loop-player has permission "bridge.staff"
+			msg(loop-player, "&a由于 &r%loop-player% &a的 CPS 过高, 已被系统自动警告.")
+		else if {vl.%loop-player%} is more than 0:
+			remove 1 from {vl.%loop-player%}
+		set {cps.r.%loop-player%} and {cps.l.%loop-player%} to 0
+		{vl.%loop-player%} is more than 0
+
+# Commands
+command /bridgingaddon [<text>]:
+	aliases: /baddon, /ba
+	trigger:
+		send "&b======== &6&lBridgingAddon 指令列表 &b========"
+		send "&6&l/tasks &7- &a查看每日任务列表."
+		send "&6&l/answercps &7- &a快捷回答点击方式."
+		send "&6&l/cpsm <玩家> &7- &a查看玩家的 CPS."
+		send "&6&l/resettasks &7- &a重置所有玩家的每日任务进度"
+		send "&6&l/askcps <玩家> &7- &a通过书本询问玩家点击方式"
+		send "&6&l/warncps <玩家> &7- &a通过书本警告玩家 CPS 过高"
+		send "&7Written by Peaksol for Inf Network"
+
+command /help [<text>]:
+	aliases: /bridge
+	trigger:
+		send "&b======== &6&lInf Bridge 指令列表 &b========"
+		send "&6&l/lobby &7- &a传送到大厅."
+		send "&6&l/hh <消息> &7- &a全服喊话"
+		send "&6&l/pvp &7- &a打开/关闭 PvP 模式."
+		send "&6&l/bskin &7- &a打开方块皮肤面板"
+		send "&6&l/stuck &7- &a清除出生点周围的方块"
+		send "&6&l/cpsm <玩家> &7- &a查看玩家的 CPS."
+		send "&6&l/speed &7- &a打开/关闭搭路速度显示."
+		send "&6&l/report <玩家> <原因> &7- &a举报一名玩家."
+		send "&3加入我们的QQ群以获取更多帮助: 739578710"
+
+command /tasks [text]:
+	trigger:
+		if sender is a player:
+			set {_book} to a new book
+			add text component "   &6&l&n> 每日任务列表 <%nl%%nl%" to {_alltext::*}
+			loop {tasks::*}:
+				if player has permission "tasks.bridge.%loop-index%.over":
+					set {_task} to a new text component with "&2⚫ %loop-value%%nl%"
+					add hover event with action SHOW_TEXT with text "&a目标: &2%loop-value%%nl%&a进度: &2已完成 (%{taskstimesrequired::%loop-index%}%/%{taskstimesrequired::%loop-index%}%)" to text component {_task}
+					add {_task} to {_alltext::*}
+				else:
+					if player has permission "tasks.bridge.%loop-index%":
+						set {_task} to a new text component with "&8⚪ %loop-value%%nl%"
+						add hover event with action SHOW_TEXT with text "&a目标: &2%loop-value%%nl%&a进度: &e进行中 (%{playertasks::%player%::%loop-index%::times}%/%{taskstimesrequired::%loop-index%}%)" to text component {_task}
+						add {_task} to {_alltext::*}
+					else:
+						set {_task} to a new text component with "&8⚪ %loop-value%%nl%"
+						add hover event with action SHOW_TEXT with text "&a目标: &2%loop-value%%nl%&a进度: &e任务未接受" to text component {_task}
+						add {_task} to {_alltext::*}
+			add text component "%nl%%nl%&5请前往大厅任务大使启动任务." to {_alltext::*}
+			add text component {_alltext::*} to book {_book}
+			open book {_book} to player
+		else:
+			msg(sender, "&c此命令只能由玩家执行.")
+
+command /taskreset [text]:
+	trigger:
+		if sender has permission "bridge.staff":
+			clear {playertasks::*}
+			loop all players:
+				refreshTasks(loop-player)
+			msg(sender, "已重置所有玩家的任务进度.")
+		else:
+			msg(sender, "&c你没有此命令使用权限.")
+
+command /cpsmanager [<player>] [<text>]:
+	aliases: /cpsm
+	trigger:
+		if arg 1 is set:
+			if arg 1 is a player:
+				msg(sender, getCPS(arg 1))
+			else:
+				msg(sender, "&c无效的玩家名.")
+		else:
+			msg(sender, "&a/cpsm <玩家> &7- 获取玩家的CPS.")
+
+command /askcps [<player>] [<text>]:
+	aliases: /acps
+	trigger:
+		if sender is a player:
+			if player has permission "bridge.staff":
+				if arg 1 is set:
+					bookAsk(arg 1)
+					set {ac.%arg 1%} to 1
+					msg(arg 1, "&c你被要求回答点击方式. 请输入 /answercps 以回答.")
+					loop all players:
+						loop-player has permission "bridge.staff"
+						msg(loop-player, "&a由于 &r%arg 1% &a的 CPS 过高, 已被 &r%player% &a要求回答点击方式.")
+				else:
+					msg(player, "&c正确用法: /askcps <玩家>")
+			else:
+				msg(sender, "&c你没有此命令使用权限.")
+		else:
+			msg(sender, "&c此命令只能由玩家执行.")
+
+command /warncps [<player>] [<text>]:
+	aliases: /wcps
+	trigger:
+		if sender is a player:
+			if player has permission "bridge.staff":
+				if arg 1 is set:
+					bookWarn(arg 1)
+					apply potion of blindness and slowness 8 to arg 1 for 8 seconds
+					loop all players:
+						loop-player has permission "bridge.staff"
+						msg(loop-player, "&a由于 &r%arg 1% &a的 CPS 过高, 已被 &r%player% &a警告.")
+				else:
+					msg(player, "&c正确用法: /warncps <玩家>")
+			else:
+				msg(player, "&c你没有此命令使用权限.")
+		else:
+			msg(sender, "&c此命令只能由玩家执行.")
+
+command /answercps [<text>]:
+	trigger:
+		if sender is a player:
+			if {ac.%player%} >= 1:
+				if arg is "其他":
+					set {_book} to a new book
+					add page "%nl%%nl%%nl%%nl%%nl%&9   在聊天框使用此命令%nl%   以回答你的点击方式:%nl%  &2&n/answercps <方式>" to {_book}
+					open book {_book} to player
+				else if arg is set:
+					set {ac.%player%} to 0
+					loop all players:
+						loop-player has permission "bridge.staff"
+						msg(loop-player, "&a%player% 的回答: &r%arg%")
+				else:
+					bookAsk(player)
+			else:
+				msg(player, "&c你没有被要求回答点击方式.")
+		else:
+			msg(sender, "&c此命令只能由玩家执行.")
+
+command /pvp [<text>]:
+	trigger:
+		sender command "bridge pvp"
+
+command /stuck [<text>]:
+	trigger:
+		sender command "imstuck"
+
+command /timer:
+	trigger:
+		false
+		{timerReady::%player%} is true
+		set {timerReady::%player%} to false
+		set {_i} to 10
+		while {_i} > 0:
+			msg(player, "&e&l%{_i}%...")
+			set {_i} to {_i} - 1
+			wait 1 second
+		msg(player, "Time's Up!")
+		set {timerReady::%player%} to true
